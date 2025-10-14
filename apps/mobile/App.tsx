@@ -11,6 +11,7 @@ import BadgesScreen from './screens/Badges';
 import FeedScreen from './screens/Feed';
 import LoginScreen from './screens/Login';
 import PresencaScreen from './screens/Presenca';
+import RankingScreen from './screens/RankingScreen';
 
 const AUTH_TOKEN_KEY = 'edclub-auth-token';
 
@@ -46,6 +47,7 @@ function AppTabs({ onLogout }: AppTabsProps) {
       <Tab.Screen name="Presença" component={PresencaScreen} />
       <Tab.Screen name="Badges" component={BadgesScreen} />
       <Tab.Screen name="Feed" component={FeedScreen} />
+      <Tab.Screen name="Ranking" component={RankingScreen} />
     </Tab.Navigator>
   );
 }

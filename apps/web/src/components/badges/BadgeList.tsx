@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { BadgeDTO } from "@edclub/shared";
 
 import { listMyBadges } from "../../lib/api/badges";
+import { BadgeIcon } from "./BadgeIcon";
 
 const formatEarnedDate = (isoDate: string) => {
   try {
@@ -84,9 +85,7 @@ export function BadgeList() {
               className="h-12 w-12 flex-none rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-slate-100 text-xl">
-              🏅
-            </div>
+            <BadgeIcon name={badge.name} className="h-12 w-12 flex-none" size={28} />
           )}
           <div className="space-y-1">
             <p className="text-sm font-semibold text-slate-800">{badge.name}</p>

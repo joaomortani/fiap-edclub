@@ -1,15 +1,25 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+import WeeklyProgress from '../components/WeeklyProgress';
 
 const PresencaScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Presença</Text>
         <Text style={styles.description}>
           Visualize suas presenças e faltas registradas ao longo do semestre.
         </Text>
-      </View>
+
+        <View style={styles.section}>
+          <WeeklyProgress />
+        </View>
+
+        <Text style={styles.helperText}>
+          Consulte o histórico detalhado de presenças na agenda e mantenha seu ritmo para desbloquear novas conquistas.
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -20,7 +30,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   content: {
-    flex: 1,
     padding: 24,
   },
   title: {
@@ -33,6 +42,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     color: '#4b5563',
+  },
+  section: {
+    marginTop: 24,
+  },
+  helperText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#6b7280',
+    marginTop: 16,
   },
 });
 
