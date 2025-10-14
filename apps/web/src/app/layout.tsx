@@ -27,9 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-slate-50 text-slate-900 antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} text-slate-900 antialiased`}>
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
             <AppHeader />

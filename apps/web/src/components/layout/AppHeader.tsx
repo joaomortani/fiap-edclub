@@ -42,7 +42,7 @@ export function AppHeader() {
         </div>
 
         <div className="flex flex-1 flex-col gap-4 md:flex-row md:items-center md:justify-end">
-          <nav className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600">
+          <nav className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-700">
             {navigationLinks.map((link) => {
               const isActive = pathname === link.href;
 
@@ -50,7 +50,7 @@ export function AppHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-md px-2 py-1 transition-colors hover:bg-slate-100 hover:text-slate-900 ${
+                  className={`rounded-md px-3 py-1.5 transition-colors hover:bg-slate-100 hover:text-slate-900 ${
                     isActive ? "bg-slate-100 text-slate-900" : ""
                   }`}
                 >
@@ -73,12 +73,20 @@ export function AppHeader() {
             ) : isLoading ? (
               <span>Carregando...</span>
             ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500"
-              >
-                Entrar
-              </Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  Entrar
+                </Link>
+                <Link
+                  href="/login?mode=register"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 via-violet-500 to-purple-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-sky-400 hover:via-violet-400 hover:to-purple-400"
+                >
+                  Criar conta
+                </Link>
+              </div>
             )}
           </div>
         </div>
