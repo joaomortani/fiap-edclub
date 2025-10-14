@@ -42,7 +42,7 @@ create table if not exists attendances (
   id uuid primary key default gen_random_uuid(),
   event_id uuid references events(id) on delete cascade,
   user_id uuid references auth.users(id) on delete cascade,
-  status text not null check (status in ('registered', 'attended', 'missed')),
+  status text not null check (status in ('present', 'absent', 'late')),
   created_at timestamptz not null default now()
 );
 
@@ -72,6 +72,38 @@ create policy if not exists "Events inserted by teachers" on events
   for insert with check (
     coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'teacher'
   );
+
+-- Attendance engagement insights ------------------------------------------
+create or replace view weekly_attendance_rank as
+select
+  a.user_id,
+  count(*) filter (where a.status in ('present', 'attended'))::int as presents,
+  count(*)::int as total,
+  round(100.0 * count(*) filter (where a.status in ('present', 'attended')) / nullif(count(*), 0), 1) as percent
+from attendances a
+where a.created_at >= date_trunc('week', now())
+  and a.created_at < date_trunc('week', now()) + interval '7 days'
+group by a.user_id
+order by percent desc, presents desc
+limit 5;
+
+create or replace function get_weekly_progress(uid uuid)
+returns table(presents int, total int, percent numeric)
+language sql
+stable
+as $$
+  select
+    count(*) filter (where status in ('present', 'attended'))::int as presents,
+    count(*)::int as total,
+    round(100.0 * count(*) filter (where status in ('present', 'attended')) / nullif(count(*), 0), 1) as percent
+  from attendances
+  where user_id = uid
+    and created_at >= date_trunc('week', now())
+    and created_at < date_trunc('week', now()) + interval '7 days';
+$$;
+
+grant select on weekly_attendance_rank to authenticated;
+grant execute on function get_weekly_progress(uuid) to authenticated;
 
 -- Seeds -------------------------------------------------------------------
 -- Basic accounts

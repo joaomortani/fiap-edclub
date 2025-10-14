@@ -1,5 +1,6 @@
 import { BadgeList } from "../../components/badges/BadgeList";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+import WeeklyProgress from "../../components/engagement/WeeklyProgress";
 
 export default function AlunoPage() {
   return (
@@ -13,14 +14,12 @@ export default function AlunoPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Presença</CardTitle>
+          <CardTitle>Progresso semanal</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-base text-slate-700">
-            Sua frequência geral está em <span className="font-semibold text-green-600">92%</span> neste semestre.
-          </p>
+        <CardContent className="space-y-4 text-sm">
+          <WeeklyProgress />
           <p className="text-slate-600">
-            Continue participando das aulas e eventos para manter sua média acima do mínimo exigido.
+            Mantenha a presença em dia para desbloquear novos badges e garantir sua participação nos projetos da turma.
           </p>
         </CardContent>
       </Card>
