@@ -1,5 +1,22 @@
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { BadgeList } from "../../components/badges/BadgeList";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+
+const WeeklyProgress = dynamic(() => import("../../components/engagement/WeeklyProgress"), {
+  ssr: false,
+  suspense: true,
+});
+
+function WeeklyProgressFallback() {
+  return (
+    <div className="space-y-2">
+      <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
+      <div className="h-3 w-full animate-pulse rounded-full bg-slate-200" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-slate-200" />
+    </div>
+  );
+}
 
 export default function AlunoPage() {
   return (
@@ -13,14 +30,14 @@ export default function AlunoPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Presença</CardTitle>
+          <CardTitle>Progresso semanal</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-base text-slate-700">
-            Sua frequência geral está em <span className="font-semibold text-green-600">92%</span> neste semestre.
-          </p>
+        <CardContent className="space-y-4 text-sm">
+          <Suspense fallback={<WeeklyProgressFallback />}>
+            <WeeklyProgress />
+          </Suspense>
           <p className="text-slate-600">
-            Continue participando das aulas e eventos para manter sua média acima do mínimo exigido.
+            Mantenha a presença em dia para desbloquear novos badges e garantir sua participação nos projetos da turma.
           </p>
         </CardContent>
       </Card>
