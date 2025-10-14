@@ -1,5 +1,6 @@
-import type { AuthResponse } from '@supabase/supabase-js';
-import { supabase } from '../supabase';
+import type { AuthResponse } from "@supabase/supabase-js";
+
+import { supabase } from "../supabase";
 
 export async function loginMagicLink(email: string): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({ email });
@@ -12,8 +13,21 @@ export async function loginMagicLink(email: string): Promise<void> {
 export async function loginWithPassword(
   email: string,
   password: string,
-): Promise<AuthResponse['data']> {
+): Promise<AuthResponse["data"]> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+): Promise<AuthResponse["data"]> {
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
     throw error;
