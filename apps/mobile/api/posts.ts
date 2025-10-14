@@ -20,14 +20,16 @@ const mapPost = (row: PostRow): PostDTO => ({
 export async function listPosts(): Promise<PostDTO[]> {
   const { data, error } = await supabase
     .from(POSTS_TABLE)
-    .select<PostRow>('id, user_id, content, created_at')
+    .select('id, user_id, content, created_at')
     .order('created_at', { ascending: false });
 
   if (error) {
     throw error;
   }
 
-  return (data ?? []).map(mapPost);
+  const rows = (data ?? []) as PostRow[];
+
+  return rows.map(mapPost);
 }
 
 export async function createPost(content: string): Promise<PostDTO> {
@@ -45,16 +47,16 @@ export async function createPost(content: string): Promise<PostDTO> {
 
   const { data, error } = await supabase
     .from(POSTS_TABLE)
-    .insert<PostRow>({
+    .insert({
       user_id: userId,
       content,
     })
-    .select<PostRow>('id, user_id, content, created_at')
+    .select('id, user_id, content, created_at')
     .single();
 
   if (error || !data) {
     throw error ?? new Error('Post não pôde ser criado.');
   }
 
-  return mapPost(data);
+  return mapPost(data as PostRow);
 }

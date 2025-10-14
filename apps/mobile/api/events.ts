@@ -24,7 +24,7 @@ const mapEvent = (row: EventRow): EventDTO => ({
 export async function listEvents(teamId?: string): Promise<EventDTO[]> {
   let query = supabase
     .from(EVENTS_TABLE)
-    .select<EventRow>('id, team_id, title, starts_at, ends_at')
+    .select('id, team_id, title, starts_at, ends_at')
     .order('starts_at', { ascending: true });
 
   if (teamId) {
@@ -37,26 +37,28 @@ export async function listEvents(teamId?: string): Promise<EventDTO[]> {
     throw error;
   }
 
-  return (data ?? []).map(mapEvent);
+  const rows = (data ?? []) as EventRow[];
+
+  return rows.map(mapEvent);
 }
 
 export async function createEvent(event: CreateEventInput): Promise<EventDTO> {
   const { data, error } = await supabase
     .from(EVENTS_TABLE)
-    .insert<EventRow>({
+    .insert({
       team_id: event.teamId,
       title: event.title,
       starts_at: event.startsAt,
       ends_at: event.endsAt,
     })
-    .select<EventRow>('id, team_id, title, starts_at, ends_at')
+    .select('id, team_id, title, starts_at, ends_at')
     .single();
 
   if (error || !data) {
     throw error ?? new Error('Evento não pôde ser criado.');
   }
 
-  return mapEvent(data);
+  return mapEvent(data as EventRow);
 }
 
 type AttendanceRow = {
@@ -82,7 +84,7 @@ export async function markAttendance(eventId: string, status: AttendanceStatus):
 
   const { error } = await supabase
     .from(EVENT_ATTENDANCE_TABLE)
-    .upsert<AttendanceRow>(
+    .upsert(
       {
         event_id: eventId,
         user_id: userId,
@@ -94,4 +96,51 @@ export async function markAttendance(eventId: string, status: AttendanceStatus):
   if (error) {
     throw error;
   }
+}
+
+type AttendanceStatusRow = {
+  event_id: string;
+  status: AttendanceStatus;
+};
+
+export async function getAttendanceStatus(
+  eventIds: string[],
+): Promise<Record<string, AttendanceStatus>> {
+  if (eventIds.length === 0) {
+    return {};
+  }
+
+  const { data: userResult, error: userError } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  const userId = userResult?.user?.id;
+
+  if (!userId) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from(EVENT_ATTENDANCE_TABLE)
+    .select('event_id, status')
+    .eq('user_id', userId)
+    .in('event_id', eventIds);
+
+  if (error) {
+    throw error;
+  }
+
+  const statusMap: Record<string, AttendanceStatus> = {};
+
+  const rows = (data ?? []) as AttendanceStatusRow[];
+
+  for (const row of rows) {
+    if (row.event_id && row.status) {
+      statusMap[row.event_id] = row.status;
+    }
+  }
+
+  return statusMap;
 }

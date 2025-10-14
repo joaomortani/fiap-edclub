@@ -36,14 +36,14 @@ export async function getWeeklyRank(): Promise<{
   percent: number;
 }[]> {
   const { data, error } = await supabase
-    .from<WeeklyRankRow>(WEEKLY_RANK_VIEW)
+    .from(WEEKLY_RANK_VIEW)
     .select('user_id, presents, total, percent');
 
   if (error) {
     throw error;
   }
 
-  const rows = (data ?? []).map((row) => ({
+  const rows = ((data ?? []) as WeeklyRankRow[]).map((row) => ({
     userId: row.user_id,
     presents: row.presents ?? 0,
     total: row.total ?? 0,
@@ -80,7 +80,7 @@ export async function getWeeklyProgress(): Promise<{
     return { presents: 0, total: 0, percent: 0 };
   }
 
-  const { data, error } = await supabase.rpc<WeeklyProgressRow[]>(WEEKLY_PROGRESS_FUNCTION, {
+  const { data, error } = await supabase.rpc(WEEKLY_PROGRESS_FUNCTION, {
     uid: userId,
   });
 
@@ -88,7 +88,7 @@ export async function getWeeklyProgress(): Promise<{
     throw error;
   }
 
-  const [row] = data ?? [];
+  const [row] = (data ?? []) as WeeklyProgressRow[];
   const presents = row?.presents ?? 0;
   const total = row?.total ?? 0;
   const percent = total === 0 ? 0 : toNumber(row?.percent);
