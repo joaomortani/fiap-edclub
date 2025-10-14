@@ -3,9 +3,9 @@
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev:web": "npm --workspace apps/web run dev",
-    "dev:mobile": "npm --workspace apps/mobile run start",
-    "build:web": "npm --workspace apps/web run build",
+    "dev:web": "npm run dev --workspace web",
+    "dev:mobile": "npm run start --workspace mobile",
+    "build:web": "npm run build --workspace web",
     "format": "prettier -w ."
   }
 }
