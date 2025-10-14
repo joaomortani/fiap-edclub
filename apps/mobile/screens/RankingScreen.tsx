@@ -164,8 +164,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   cardBody: {
     flex: 1,

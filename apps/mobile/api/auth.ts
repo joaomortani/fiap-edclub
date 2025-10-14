@@ -21,3 +21,16 @@ export async function loginWithPassword(
 
   return data;
 }
+
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+): Promise<AuthResponse['data']> {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

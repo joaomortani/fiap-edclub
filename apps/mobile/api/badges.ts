@@ -36,7 +36,7 @@ export async function listMyBadges(): Promise<BadgeDTO[]> {
 
   const { data, error } = await supabase
     .from(USER_BADGES_TABLE)
-    .select<BadgeRow>('id, user_id, name, description, icon_url, earned_at')
+    .select('id, user_id, name, description, icon_url, earned_at')
     .eq('user_id', userId)
     .order('earned_at', { ascending: false });
 
@@ -44,5 +44,7 @@ export async function listMyBadges(): Promise<BadgeDTO[]> {
     throw error;
   }
 
-  return (data ?? []).map(mapBadge);
+  const rows = (data ?? []) as BadgeRow[];
+
+  return rows.map(mapBadge);
 }
