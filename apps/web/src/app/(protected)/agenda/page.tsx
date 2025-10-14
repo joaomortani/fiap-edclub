@@ -4,9 +4,10 @@ import { Suspense, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import type { Role } from "@edclub/shared";
-import { EventForm } from "../../components/agenda/EventForm";
-import { EventList } from "../../components/agenda/EventList";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
+
+import { EventForm } from "@/components/agenda/EventForm";
+import { EventList } from "@/components/agenda/EventList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
 const DEFAULT_TEAM_ID = process.env.NEXT_PUBLIC_DEFAULT_TEAM_ID;
 
@@ -18,7 +19,7 @@ const resolveRole = (value: string | null): Role => {
   return "student";
 };
 
-const WeeklyRank = dynamic(() => import("../../components/engagement/WeeklyRank"), {
+const WeeklyRank = dynamic(() => import("@/components/engagement/WeeklyRank"), {
   ssr: false,
   suspense: true,
 });

@@ -1,6 +1,6 @@
-import { BadgeList } from "../../components/badges/BadgeList";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card";
-import WeeklyProgress from "../../components/engagement/WeeklyProgress";
+import { BadgeList } from "@/components/badges/BadgeList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import WeeklyProgress from "@/components/engagement/WeeklyProgress";
 
 export default function AlunoPage() {
   return (

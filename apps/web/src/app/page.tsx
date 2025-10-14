@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Button } from "../components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
+
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 
 export default function Home() {
   return (
@@ -9,9 +10,8 @@ export default function Home() {
       <section className="space-y-4">
         <h1 className="text-4xl font-bold">Bem-vindo ao EDClub</h1>
         <p className="max-w-2xl text-lg text-slate-600">
-          Navegue pelo portal para acompanhar o feed de novidades, organizar sua agenda e
-          acessar a área do aluno. Utilize os componentes base para construir novas
-          interfaces com rapidez.
+          Navegue pelo portal para acompanhar o feed de novidades, organizar sua agenda e acessar a área do aluno. Utilize os
+          componentes base para construir novas interfaces com rapidez.
         </p>
         <div className="flex flex-wrap gap-4">
           <Link
@@ -20,9 +20,12 @@ export default function Home() {
           >
             Ir para o feed
           </Link>
-          <Button>
+          <Link
+            href="/login?mode=register"
+            className="inline-flex items-center justify-center rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+          >
             Criar conta
-          </Button>
+          </Link>
         </div>
       </section>
 
