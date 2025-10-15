@@ -14,7 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 
 import { getAttendanceStatus, listEvents, markAttendance } from './api/events';
 import { listMyBadges } from './api/badges';
@@ -70,6 +71,22 @@ const isToday = (value: string): boolean => {
     target.getDate() === today.getDate()
   );
 };
+
+type NavItem = {
+  key: string;
+  label: string;
+  icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { key: 'home', label: 'Início', icon: 'home-variant' },
+  { key: 'agenda', label: 'Agenda', icon: 'calendar-month' },
+  { key: 'attendance', label: 'Presença', icon: 'check-decagram' },
+  { key: 'badges', label: 'Badges', icon: 'medal-outline' },
+  { key: 'feed', label: 'Feed', icon: 'message-text-outline' },
+];
+
+const ACTIVE_NAV_ITEM_KEY = 'home';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -338,19 +355,20 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#ffffff"
-            colors={["#2563eb"]}
-          />
-        }
-      >
-        <View style={styles.heroContainer}>
+      <View style={styles.appContainer}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor="#ffffff"
+              colors={["#2563eb"]}
+            />
+          }
+        >
+          <View style={styles.heroContainer}>
           <View style={styles.headerBar}>
             <View>
               <Text style={styles.headerGreeting}>Olá,</Text>
@@ -525,8 +543,37 @@ export default function App() {
               </View>
             )}
           </View>
+        </ScrollView>
+        <View style={styles.bottomNav}>
+          {NAV_ITEMS.map((item) => {
+            const isActive = item.key === ACTIVE_NAV_ITEM_KEY;
+
+            return (
+              <TouchableOpacity
+                key={item.key}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                onPress={() => {}}
+                style={styles.navItem}
+              >
+                <MaterialCommunityIcons
+                  accessibilityLabel={item.label}
+                  name={item.icon}
+                  size={24}
+                  color={isActive ? '#2563eb' : '#94a3b8'}
+                />
+                <Text style={[styles.navItemLabel, isActive && styles.navItemLabelActive]}>{item.label}</Text>
+                <View
+                  style={[
+                    styles.navItemIndicator,
+                    !isActive && styles.navItemIndicatorInactive,
+                  ]}
+                />
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -542,11 +589,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  appContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   heroContainer: {
     backgroundColor: '#0f172a',
@@ -770,5 +821,43 @@ const styles = StyleSheet.create({
   postTimestamp: {
     fontSize: 12,
     color: '#64748b',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 20,
+    gap: 12,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  navItemLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94a3b8',
+  },
+  navItemLabelActive: {
+    color: '#2563eb',
+  },
+  navItemIndicator: {
+    marginTop: 6,
+    height: 4,
+    width: 28,
+    borderRadius: 999,
+    backgroundColor: '#2563eb',
+  },
+  navItemIndicatorInactive: {
+    backgroundColor: 'transparent',
   },
 });
