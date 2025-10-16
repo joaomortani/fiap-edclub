@@ -67,7 +67,7 @@ type AttendanceRow = {
   status: AttendanceStatus;
 };
 
-const EVENT_ATTENDANCE_TABLE = 'event_attendance';
+const EVENT_ATTENDANCE_TABLE = 'attendances';
 
 export async function markAttendance(eventId: string, status: AttendanceStatus): Promise<void> {
   const { data: userResult, error: userError } = await supabase.auth.getUser();

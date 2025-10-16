@@ -14,7 +14,8 @@ type BadgeIconProps = {
 
 export function BadgeIcon({ name, size = 32, className, ...props }: BadgeIconProps) {
   const IconComponent = ICON_MAP[name] ?? Medal;
-  const baseClasses = "inline-flex items-center justify-center rounded-full bg-slate-100 p-2 text-slate-700";
+  const baseClasses =
+    "inline-flex items-center justify-center rounded-full bg-slate-800/80 p-2 text-amber-400";
 
   return (
     <span

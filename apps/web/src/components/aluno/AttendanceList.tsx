@@ -108,12 +108,12 @@ export function AttendanceList() {
 
   const content = useMemo(() => {
     if (isLoading) {
-      return <p className="text-sm text-slate-500">Carregando eventos...</p>;
+      return <p className="text-sm text-slate-400">Carregando eventos...</p>;
     }
 
     if (events.length === 0) {
       return (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           Você não possui eventos agendados para hoje.
         </p>
       );
@@ -128,8 +128,8 @@ export function AttendanceList() {
           return (
             <li key={event.id} className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-slate-900">{event.title}</p>
-                <p className="text-sm text-slate-500">
+                <p className="font-medium text-slate-100">{event.title}</p>
+                <p className="text-sm text-slate-400">
                   {timeFormatter.format(startsAt)} - {timeFormatter.format(endsAt)}
                 </p>
               </div>
@@ -150,13 +150,13 @@ export function AttendanceList() {
     <Card>
       <CardHeader>
         <CardTitle>Presença de hoje</CardTitle>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           Visualize seus eventos do dia e registre sua presença.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {error ? (
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-red-400">{error}</p>
         ) : null}
         {content}
       </CardContent>

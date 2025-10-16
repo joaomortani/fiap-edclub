@@ -8,7 +8,7 @@ type CardSectionProps = HTMLAttributes<HTMLDivElement>;
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => {
     const baseClasses =
-      "rounded-xl border border-slate-200 bg-white p-6 shadow-sm";
+      "rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 shadow-lg shadow-slate-950/40";
 
     return (
       <div
@@ -40,7 +40,7 @@ CardHeader.displayName = "CardHeader";
 
 export const CardTitle = forwardRef<HTMLDivElement, CardSectionProps>(
   ({ className, ...props }, ref) => {
-    const baseClasses = "text-xl font-semibold";
+    const baseClasses = "text-xl font-semibold text-slate-100";
 
     return (
       <div
@@ -56,7 +56,7 @@ CardTitle.displayName = "CardTitle";
 
 export const CardContent = forwardRef<HTMLDivElement, CardSectionProps>(
   ({ className, ...props }, ref) => {
-    const baseClasses = "space-y-2 text-sm text-slate-600";
+    const baseClasses = "space-y-2 text-sm text-slate-300";
 
     return (
       <div

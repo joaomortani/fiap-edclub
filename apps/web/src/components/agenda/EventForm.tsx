@@ -108,7 +108,7 @@ export function EventForm({ role, teamId, onCreated }: EventFormProps) {
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="title">
+        <label className="text-sm font-medium text-slate-200" htmlFor="title">
           Título
         </label>
         <Input
@@ -121,7 +121,7 @@ export function EventForm({ role, teamId, onCreated }: EventFormProps) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="startsAt">
+          <label className="text-sm font-medium text-slate-200" htmlFor="startsAt">
             Início
           </label>
           <Input
@@ -132,7 +132,7 @@ export function EventForm({ role, teamId, onCreated }: EventFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor="endsAt">
+          <label className="text-sm font-medium text-slate-200" htmlFor="endsAt">
             Término
           </label>
           <Input
@@ -145,13 +145,13 @@ export function EventForm({ role, teamId, onCreated }: EventFormProps) {
       </div>
 
       {error ? (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-red-400">{error}</p>
       ) : successMessage ? (
-        <p className="text-sm text-green-600">{successMessage}</p>
+        <p className="text-sm text-emerald-400">{successMessage}</p>
       ) : null}
 
       <div>
-        <Button disabled={isSubmitting} type="submit">
+        <Button className="bg-blue-500 hover:bg-blue-400" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Salvando..." : "Criar evento"}
         </Button>
       </div>

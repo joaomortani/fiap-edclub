@@ -123,12 +123,12 @@ export default function WeeklyRank() {
       <ul className="space-y-3" aria-busy="true">
         {Array.from({ length: 3 }).map((_, index) => (
           <li key={index} className="flex items-center gap-3">
-            <div className="h-8 w-8 animate-pulse rounded-full bg-slate-200" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-slate-800/60" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
-              <div className="h-3 w-1/2 animate-pulse rounded bg-slate-200" />
+              <div className="h-4 w-2/3 animate-pulse rounded bg-slate-800/60" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-slate-800/60" />
             </div>
-            <div className="h-4 w-12 animate-pulse rounded bg-slate-200" />
+            <div className="h-4 w-12 animate-pulse rounded bg-slate-800/60" />
           </li>
         ))}
       </ul>
@@ -137,7 +137,7 @@ export default function WeeklyRank() {
 
   if (hasError) {
     return (
-      <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+      <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
         Não foi possível carregar o ranking desta semana.
       </div>
     );
@@ -145,7 +145,7 @@ export default function WeeklyRank() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+      <div className="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400">
         Nenhuma presença registrada nesta semana ainda. Participe dos eventos para aparecer aqui!
       </div>
     );
@@ -156,16 +156,16 @@ export default function WeeklyRank() {
       {items.map((item) => (
         <li
           key={item.userId}
-          className="flex items-center gap-3 rounded-lg border border-slate-100 bg-white p-3 shadow-sm"
+          className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/60 p-3 shadow-lg shadow-slate-950/40"
         >
           <span className="text-xl" aria-hidden>{item.icon}</span>
           <div className="flex flex-1 flex-col">
-            <span className="text-sm font-semibold text-slate-800">{item.label}</span>
-            <span className="text-xs text-slate-500">
+            <span className="text-sm font-semibold text-slate-100">{item.label}</span>
+            <span className="text-xs text-slate-400">
               {item.presents} de {item.total} presenças
             </span>
           </div>
-          <span className="text-sm font-semibold text-emerald-600">{item.percent.toFixed(1)}%</span>
+          <span className="text-sm font-semibold text-emerald-400">{item.percent.toFixed(1)}%</span>
         </li>
       ))}
     </ol>

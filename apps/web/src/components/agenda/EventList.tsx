@@ -93,7 +93,7 @@ export function EventList({ teamId, refreshKey }: EventListProps) {
   if (events.length === 0) {
     return (
       <Card>
-        <CardContent className="text-sm text-slate-600">
+        <CardContent className="text-sm text-slate-400">
           {emptyStateMessage}
         </CardContent>
       </Card>
@@ -108,7 +108,7 @@ export function EventList({ teamId, refreshKey }: EventListProps) {
             <CardTitle>{event.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{formatEventRange(event)}</p>
+            <p className="text-sm text-slate-300">{formatEventRange(event)}</p>
           </CardContent>
         </Card>
       ))}

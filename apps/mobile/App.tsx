@@ -22,6 +22,7 @@ import { listMyBadges } from './api/badges';
 import { createPost, listPosts } from './api/posts';
 import BadgeIcon from './components/BadgeIcon';
 import WeeklyProgress from './components/WeeklyProgress';
+import AgendaScreen from './screens/Agenda';
 import LoginScreen from './screens/Login';
 import { supabase } from './lib/supabase';
 
@@ -86,8 +87,6 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'feed', label: 'Feed', icon: 'message-text-outline' },
 ];
 
-const ACTIVE_NAV_ITEM_KEY = 'home';
-
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -109,6 +108,7 @@ export default function App() {
   const [newPostContent, setNewPostContent] = useState('');
 
   const [refreshing, setRefreshing] = useState(false);
+  const [activeNavKey, setActiveNavKey] = useState<NavItem['key']>('home');
 
   const handleRequestError = useCallback((fallback: string, error: unknown) => {
     Alert.alert('Erro', getErrorMessage(fallback, error));
@@ -340,6 +340,192 @@ export default function App() {
     setSessionError(null);
   }, []);
 
+  const handleNavPress = useCallback((itemKey: NavItem['key']) => {
+    if (itemKey === 'home' || itemKey === 'agenda') {
+      setActiveNavKey(itemKey);
+      return;
+    }
+
+    Alert.alert('Em breve', 'Essa área estará disponível em breve.');
+  }, []);
+
+  const renderHomeContent = () => (
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor="#ffffff"
+          colors={["#2563eb"]}
+        />
+      }
+    >
+      <View style={styles.heroContainer}>
+        <View style={styles.headerBar}>
+          <View>
+            <Text style={styles.headerGreeting}>Olá,</Text>
+            <Text style={styles.headerUser}>{session.user?.email ?? 'Aluno EDClub'}</Text>
+          </View>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => void handleSignOut()}
+            style={styles.signOutButton}
+          >
+            <Text style={styles.signOutButtonText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.heroCard}>
+          <Text style={styles.heroLabel}>Seu hub acadêmico</Text>
+          <Text style={styles.heroTitle}>Organize sua rotina com o EDClub</Text>
+          <Text style={styles.heroSubtitle}>
+            Acompanhe eventos, marque presença e compartilhe conquistas com a comunidade.
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.mainContent}>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Agenda</Text>
+            <Text style={styles.sectionSubtitle}>Próximos compromissos da sua turma</Text>
+          </View>
+          {agendaLoading ? (
+            <ActivityIndicator color="#2563eb" />
+          ) : upcomingEvents.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum evento na agenda.</Text>
+          ) : (
+            <View style={styles.listGap}>
+              {upcomingEvents.map((event) => (
+                <View key={event.id} style={styles.eventCard}>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
+                  <Text style={styles.eventPeriod}>{formatEventPeriod(event)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Presença</Text>
+            <Text style={styles.sectionSubtitle}>Eventos de hoje para confirmar presença</Text>
+          </View>
+          <WeeklyProgress />
+          {attendanceLoading ? (
+            <ActivityIndicator color="#2563eb" />
+          ) : todaysEvents.length === 0 ? (
+            <Text style={styles.emptyText}>Você não possui eventos para hoje.</Text>
+          ) : (
+            <View style={styles.listGap}>
+              {todaysEvents.map((event) => {
+                const status = attendanceStatus[event.id];
+                const isMarked = status === 'present';
+                const isLoading = markingEventId === event.id;
+
+                return (
+                  <View key={event.id} style={styles.attendanceCard}>
+                    <View style={styles.attendanceInfo}>
+                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      <Text style={styles.eventPeriod}>{formatEventPeriod(event)}</Text>
+                    </View>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      disabled={isMarked || isLoading}
+                      onPress={() => void handleMarkAttendance(event.id)}
+                      style={[styles.attendanceButton, isMarked && styles.attendanceButtonMarked]}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#ffffff" />
+                      ) : (
+                        <Text style={styles.attendanceButtonText}>
+                          {isMarked ? 'Presença registrada' : 'Marcar presença'}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Badges</Text>
+            <Text style={styles.sectionSubtitle}>Conquistas desbloqueadas recentemente</Text>
+          </View>
+          {badgesLoading ? (
+            <ActivityIndicator color="#2563eb" />
+          ) : badges.length === 0 ? (
+            <Text style={styles.emptyText}>Nenhum badge conquistado ainda.</Text>
+          ) : (
+            <View style={styles.listGap}>
+              {badges.map((badge) => (
+                <View key={badge.id} style={styles.badgeCard}>
+                  <View style={styles.badgeIconWrapper}>
+                    <BadgeIcon name={badge.name} />
+                  </View>
+                  <View style={styles.badgeInfo}>
+                    <Text style={styles.badgeName}>{badge.name}</Text>
+                    <Text style={styles.badgeDescription}>{badge.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Feed</Text>
+            <Text style={styles.sectionSubtitle}>Compartilhe novidades com a turma</Text>
+          </View>
+          <View style={styles.postComposer}>
+            <Text style={styles.postComposerLabel}>Publique algo</Text>
+            <TextInput
+              style={styles.postInput}
+              placeholder="Compartilhe uma atualização..."
+              placeholderTextColor="#64748b"
+              multiline
+              value={newPostContent}
+              onChangeText={setNewPostContent}
+            />
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={isPostButtonDisabled}
+              onPress={() => void handleCreatePost()}
+              style={[styles.publishButton, isPostButtonDisabled && styles.publishButtonDisabled]}
+            >
+              {posting ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.publishButtonText}>Publicar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {postsLoading ? (
+            <ActivityIndicator color="#2563eb" />
+          ) : posts.length === 0 ? (
+            <Text style={styles.emptyText}>Ainda não há posts no feed.</Text>
+          ) : (
+            <View style={styles.listGap}>
+              {posts.map((post) => (
+                <View key={post.id} style={styles.postCard}>
+                  <Text style={styles.postContent}>{post.content}</Text>
+                  <Text style={styles.postTimestamp}>{formatDateTime(post.createdAt)}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+    </ScrollView>
+  );
+
   if (sessionLoading) {
     return (
       <SafeAreaView style={styles.loadingSafeArea}>
@@ -356,211 +542,39 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
       <View style={styles.appContainer}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor="#ffffff"
-              colors={["#2563eb"]}
-            />
-          }
-        >
-          <View style={styles.heroContainer}>
-          <View style={styles.headerBar}>
-            <View>
-              <Text style={styles.headerGreeting}>Olá,</Text>
-              <Text style={styles.headerUser}>{session.user?.email ?? 'Aluno EDClub'}</Text>
-            </View>
-            <TouchableOpacity
-              accessibilityRole="button"
-              onPress={() => void handleSignOut()}
-              style={styles.signOutButton}
-            >
-              <Text style={styles.signOutButtonText}>Sair</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.heroCard}>
-            <Text style={styles.heroLabel}>Seu hub acadêmico</Text>
-            <Text style={styles.heroTitle}>Organize sua rotina com o EDClub</Text>
-            <Text style={styles.heroSubtitle}>
-              Acompanhe eventos, marque presença e compartilhe conquistas com a comunidade.
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.mainContent}>
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Agenda</Text>
-              <Text style={styles.sectionSubtitle}>Próximos compromissos da sua turma</Text>
-            </View>
-            {agendaLoading ? (
-              <ActivityIndicator color="#2563eb" />
-            ) : upcomingEvents.length === 0 ? (
-              <Text style={styles.emptyText}>Nenhum evento na agenda.</Text>
-            ) : (
-              <View style={styles.listGap}>
-                {upcomingEvents.map((event) => (
-                  <View key={event.id} style={styles.eventCard}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Text style={styles.eventPeriod}>{formatEventPeriod(event)}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Presença</Text>
-              <Text style={styles.sectionSubtitle}>Eventos de hoje para confirmar presença</Text>
-            </View>
-            <WeeklyProgress />
-            {attendanceLoading ? (
-              <ActivityIndicator color="#2563eb" />
-            ) : todaysEvents.length === 0 ? (
-              <Text style={styles.emptyText}>Você não possui eventos para hoje.</Text>
-            ) : (
-              <View style={styles.listGap}>
-                {todaysEvents.map((event) => {
-                  const status = attendanceStatus[event.id];
-                  const isMarked = status === 'present';
-                  const isLoading = markingEventId === event.id;
-
-                  return (
-                    <View key={event.id} style={styles.attendanceCard}>
-                      <View style={styles.attendanceInfo}>
-                        <Text style={styles.eventTitle}>{event.title}</Text>
-                        <Text style={styles.eventPeriod}>{formatEventPeriod(event)}</Text>
-                      </View>
-                      <TouchableOpacity
-                        accessibilityRole="button"
-                        disabled={isMarked || isLoading}
-                        onPress={() => void handleMarkAttendance(event.id)}
-                        style={[
-                          styles.attendanceButton,
-                          (isMarked || isLoading) && styles.attendanceButtonDisabled,
-                        ]}
-                      >
-                        {isLoading ? (
-                          <ActivityIndicator color="#ffffff" />
-                        ) : (
-                          <Text style={styles.attendanceButtonText}>
-                            {isMarked ? 'Presença registrada' : 'Marcar presença'}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Badges</Text>
-              <Text style={styles.sectionSubtitle}>Conquistas desbloqueadas no EDClub</Text>
-            </View>
-            {badgesLoading ? (
-              <ActivityIndicator color="#2563eb" />
-            ) : badges.length === 0 ? (
-              <Text style={styles.emptyText}>Você ainda não conquistou badges.</Text>
-            ) : (
-              <View style={styles.badgeGrid}>
-                {badges.map((badge) => (
-                  <View key={badge.id} style={styles.badgeCard}>
-                    {badge.iconUrl ? (
-                      <Image
-                        accessibilityIgnoresInvertColors
-                        source={{ uri: badge.iconUrl }}
-                        style={styles.badgeImage}
-                      />
-                    ) : (
-                      <View style={styles.badgeIconWrapper}>
-                        <BadgeIcon name={badge.name} size={28} color="#fbbf24" />
-                      </View>
-                    )}
-                    <Text style={styles.badgeTitle}>{badge.name}</Text>
-                    <Text style={styles.badgeDescription}>{badge.description}</Text>
-                    <Text style={styles.badgeDate}>
-                      Conquistado em {formatDate(badge.earnedAt)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Feed da turma</Text>
-              <Text style={styles.sectionSubtitle}>Compartilhe novidades com a comunidade</Text>
-            </View>
-            <View style={styles.postComposer}>
-              <TextInput
-                multiline
-                placeholder="Compartilhe algo com sua turma"
-                placeholderTextColor="#94a3b8"
-                style={styles.postInput}
-                value={newPostContent}
-                onChangeText={setNewPostContent}
-                textAlignVertical="top"
-              />
-              <TouchableOpacity
-                accessibilityRole="button"
-                disabled={isPostButtonDisabled}
-                onPress={() => void handleCreatePost()}
-                style={[
-                  styles.publishButton,
-                  isPostButtonDisabled && styles.publishButtonDisabled,
-                ]}
-              >
-                {posting ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <Text style={styles.publishButtonText}>Publicar</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {postsLoading ? (
-              <ActivityIndicator color="#2563eb" />
-            ) : posts.length === 0 ? (
-              <Text style={styles.emptyText}>Ainda não há posts no feed.</Text>
-            ) : (
-              <View style={styles.listGap}>
-                {posts.map((post) => (
-                  <View key={post.id} style={styles.postCard}>
-                    <Text style={styles.postContent}>{post.content}</Text>
-                    <Text style={styles.postTimestamp}>{formatDateTime(post.createdAt)}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        </ScrollView>
+        {activeNavKey === 'agenda' ? (
+          <AgendaScreen
+            attendanceLoading={attendanceLoading}
+            attendanceStatus={attendanceStatus}
+            events={agenda}
+            isLoading={agendaLoading}
+            markingEventId={markingEventId}
+            onMarkAttendance={handleMarkAttendance}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            todaysEvents={todaysEvents}
+          />
+        ) : (
+          renderHomeContent()
+        )}
         <View style={styles.bottomNav}>
           {NAV_ITEMS.map((item) => {
-            const isActive = item.key === ACTIVE_NAV_ITEM_KEY;
+            const isActive = item.key === activeNavKey;
+            const isSupported = item.key === 'home' || item.key === 'agenda';
 
             return (
               <TouchableOpacity
                 key={item.key}
                 accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-                onPress={() => {}}
+                accessibilityState={{ selected: isActive, disabled: !isSupported }}
+                onPress={() => handleNavPress(item.key)}
                 style={styles.navItem}
               >
                 <MaterialCommunityIcons
                   accessibilityLabel={item.label}
                   name={item.icon}
                   size={24}
-                  color={isActive ? '#2563eb' : '#94a3b8'}
+                  color={isActive ? '#2563eb' : isSupported ? '#94a3b8' : 'rgba(148,163,184,0.4)'}
                 />
                 <Text style={[styles.navItemLabel, isActive && styles.navItemLabelActive]}>{item.label}</Text>
                 <View

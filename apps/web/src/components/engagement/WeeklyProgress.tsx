@@ -68,16 +68,16 @@ export default function WeeklyProgress() {
   if (isLoading) {
     return (
       <div className="space-y-2" aria-busy="true">
-        <div className="h-4 w-32 animate-pulse rounded bg-slate-200" />
-        <div className="h-3 w-full animate-pulse rounded-full bg-slate-200" />
-        <div className="h-3 w-1/2 animate-pulse rounded bg-slate-200" />
+        <div className="h-4 w-32 animate-pulse rounded bg-slate-800/60" />
+        <div className="h-3 w-full animate-pulse rounded-full bg-slate-800/60" />
+        <div className="h-3 w-1/2 animate-pulse rounded bg-slate-800/60" />
       </div>
     );
   }
 
   if (hasError) {
     return (
-      <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+      <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
         Não foi possível carregar seu progresso semanal agora. Tente novamente mais tarde.
       </div>
     );
@@ -88,12 +88,12 @@ export default function WeeklyProgress() {
 
   return (
     <section className="space-y-3" aria-live="polite">
-      <header className="flex items-center justify-between text-sm font-medium text-slate-700">
+      <header className="flex items-center justify-between text-sm font-medium text-slate-300">
         <span>Progresso da semana</span>
-        <span className="text-base font-semibold text-slate-900">{displayPercent.toFixed(1)}%</span>
+        <span className="text-base font-semibold text-slate-100">{displayPercent.toFixed(1)}%</span>
       </header>
       <div
-        className="h-3 w-full overflow-hidden rounded-full bg-slate-200"
+        className="h-3 w-full overflow-hidden rounded-full bg-slate-800"
         role="progressbar"
         aria-label="Progresso de presença semanal"
         aria-valuemin={0}
@@ -105,7 +105,7 @@ export default function WeeklyProgress() {
           style={{ width: `${displayPercent}%` }}
         />
       </div>
-      <p className="text-xs font-medium text-slate-500">Presenças registradas: {legend}</p>
+      <p className="text-xs font-medium text-slate-400">Presenças registradas: {legend}</p>
     </section>
   );
 }

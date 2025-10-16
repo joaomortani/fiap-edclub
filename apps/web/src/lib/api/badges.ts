@@ -3,23 +3,31 @@ import { supabase } from '../supabase';
 
 const USER_BADGES_TABLE = 'user_badges';
 
-type BadgeRow = {
+type BadgeDetails = {
   id: string;
-  user_id: string;
   name: string;
-  description: string;
-  icon_url: string | null;
-  earned_at: string;
+  rule: string | null;
 };
 
-const mapBadge = (row: BadgeRow): BadgeDTO => ({
-  id: row.id,
-  userId: row.user_id,
-  name: row.name,
-  description: row.description,
-  iconUrl: row.icon_url,
-  earnedAt: row.earned_at,
-});
+type BadgeRow = {
+  badge_id: string;
+  user_id: string;
+  awarded_at: string;
+  badges: BadgeDetails | null;
+};
+
+const mapBadge = (row: BadgeRow): BadgeDTO => {
+  const badge = row.badges;
+
+  return {
+    id: badge?.id ?? row.badge_id,
+    userId: row.user_id,
+    name: badge?.name ?? 'Conquista EDClub',
+    description: badge?.rule ?? 'Conquista registrada no EDClub.',
+    iconUrl: null,
+    earnedAt: row.awarded_at,
+  };
+};
 
 export async function listMyBadges(): Promise<BadgeDTO[]> {
   const { data: userResult, error: userError } = await supabase.auth.getUser();
@@ -36,9 +44,9 @@ export async function listMyBadges(): Promise<BadgeDTO[]> {
 
   const { data, error } = await supabase
     .from(USER_BADGES_TABLE)
-    .select<BadgeRow>('id, user_id, name, description, icon_url, earned_at')
+    .select<BadgeRow>('badge_id, user_id, awarded_at, badges ( id, name, rule )')
     .eq('user_id', userId)
-    .order('earned_at', { ascending: false });
+    .order('awarded_at', { ascending: false });
 
   if (error) {
     throw error;
