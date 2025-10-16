@@ -4,9 +4,10 @@ import { apiRequest } from './http';
 
 type BadgeResponse = {
   id: string;
+  userId: string;
   name: string;
-  description?: string | null;
-  icon_url?: string | null;
+  description: string | null;
+  iconUrl: string | null;
   awardedAt: string | null;
 };
 
@@ -16,9 +17,10 @@ type ListBadgesResponse = {
 
 const mapBadge = (badge: BadgeResponse): BadgeDTO => ({
   id: badge.id,
+  userId: badge.userId,
   name: badge.name,
   description: badge.description ?? '',
-  iconUrl: badge.icon_url ?? null,
+  iconUrl: badge.iconUrl,
   earnedAt: badge.awardedAt ?? ''
 });
 
