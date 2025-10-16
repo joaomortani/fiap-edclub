@@ -1,5 +1,4 @@
 import { StatusBar } from 'expo-status-bar';
-import type { Session } from '@supabase/supabase-js';
 import type { AttendanceStatus, BadgeDTO, EventDTO, PostDTO } from '@edclub/shared';
 import {
   ActivityIndicator,
@@ -17,6 +16,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 
+import { fetchProfile, type ProfileResponse } from './api/auth';
 import { getAttendanceStatus, listEvents, markAttendance } from './api/events';
 import { listMyBadges } from './api/badges';
 import { createPost, listPosts } from './api/posts';
@@ -24,7 +24,13 @@ import BadgeIcon from './components/BadgeIcon';
 import WeeklyProgress from './components/WeeklyProgress';
 import AgendaScreen from './screens/Agenda';
 import LoginScreen from './screens/Login';
-import { supabase } from './lib/supabase';
+import {
+  clearSession as clearStoredSession,
+  loadSession,
+  saveSession,
+  type SessionTokens,
+} from './lib/auth-storage';
+import { setAuthTokens as setClientAuthTokens } from './api/client';
 
 const timeFormat: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
 const dateFormat: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
@@ -88,9 +94,10 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [authTokens, setAuthTokensState] = useState<SessionTokens | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const [agenda, setAgenda] = useState<EventDTO[]>([]);
   const [agendaLoading, setAgendaLoading] = useState(false);
@@ -117,57 +124,70 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadSession = async () => {
+    const bootstrap = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const stored = await loadSession();
 
         if (!isMounted) {
           return;
         }
 
-        if (error) {
-          setSession(null);
-          setSessionError(error.message);
-        } else {
-          setSession(data.session ?? null);
-          setSessionError(null);
+        if (!stored) {
+          setAuthTokensState(null);
+          setClientAuthTokens(null);
+          setProfile(null);
+          setAuthError(null);
+          return;
+        }
+
+        setAuthTokensState(stored);
+        setClientAuthTokens(stored);
+
+        try {
+          const profileResponse = await fetchProfile();
+
+          if (!isMounted) {
+            return;
+          }
+
+          setProfile(profileResponse);
+          setAuthError(null);
+        } catch (error) {
+          if (!isMounted) {
+            return;
+          }
+
+          setProfile(null);
+          setAuthError(
+            getErrorMessage('Não foi possível carregar a sessão atual.', error),
+          );
+          await clearStoredSession();
+          setAuthTokensState(null);
+          setClientAuthTokens(null);
         }
       } catch (error) {
         if (isMounted) {
-          setSession(null);
-          setSessionError(
-            error instanceof Error ? error.message : 'Não foi possível carregar a sessão atual.',
-          );
+          setProfile(null);
+          setAuthTokensState(null);
+          setClientAuthTokens(null);
+          setAuthError(getErrorMessage('Não foi possível carregar a sessão atual.', error));
         }
       } finally {
         if (isMounted) {
-          setSessionLoading(false);
+          setAuthLoading(false);
         }
       }
     };
 
-    void loadSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setSession(nextSession);
-      setSessionError(null);
-      setSessionLoading(false);
-    });
+    void bootstrap();
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
   const fetchAgenda = useCallback(async () => {
-    if (!session) {
+    if (!authTokens) {
       setAgenda([]);
       setAgendaError(null);
       return;
@@ -183,10 +203,10 @@ export default function App() {
     } finally {
       setAgendaLoading(false);
     }
-  }, [session]);
+  }, [authTokens]);
 
   const fetchBadges = useCallback(async () => {
-    if (!session) {
+    if (!authTokens) {
       setBadges([]);
       setBadgesError(null);
       return;
@@ -202,10 +222,10 @@ export default function App() {
     } finally {
       setBadgesLoading(false);
     }
-  }, [session]);
+  }, [authTokens]);
 
   const fetchPosts = useCallback(async () => {
-    if (!session) {
+    if (!authTokens) {
       setPosts([]);
       setPostsError(null);
       return;
@@ -221,20 +241,20 @@ export default function App() {
     } finally {
       setPostsLoading(false);
     }
-  }, [session]);
+  }, [authTokens]);
 
   const handleRefresh = useCallback(async () => {
-    if (!session) {
+    if (!authTokens) {
       return;
     }
 
     setRefreshing(true);
     await Promise.all([fetchAgenda(), fetchBadges(), fetchPosts()]);
     setRefreshing(false);
-  }, [fetchAgenda, fetchBadges, fetchPosts, session]);
+  }, [fetchAgenda, fetchBadges, fetchPosts, authTokens]);
 
   useEffect(() => {
-    if (!session) {
+    if (!authTokens) {
       setAgenda([]);
       setBadges([]);
       setPosts([]);
@@ -247,7 +267,7 @@ export default function App() {
     }
 
     void handleRefresh();
-  }, [handleRefresh, session]);
+  }, [handleRefresh, authTokens]);
 
   const todaysEvents = useMemo(
     () => agenda.filter((event) => isToday(event.startsAt)),
@@ -257,7 +277,7 @@ export default function App() {
   const upcomingEvents = useMemo(() => agenda.slice(0, 5), [agenda]);
 
   useEffect(() => {
-    if (!session) {
+    if (!authTokens) {
       setAttendanceStatus({});
       setAttendanceLoading(false);
       setAttendanceError(null);
@@ -300,9 +320,13 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [session, todaysEvents]);
+  }, [authTokens, todaysEvents]);
 
   const handleMarkAttendance = useCallback(async (eventId: string) => {
+    if (!authTokens) {
+      return;
+    }
+
     setMarkingEventId(eventId);
     try {
       await markAttendance(eventId, 'present');
@@ -317,11 +341,11 @@ export default function App() {
     } finally {
       setMarkingEventId(null);
     }
-  }, []);
+  }, [authTokens]);
 
   const handleCreatePost = useCallback(async () => {
     const content = newPostContent.trim();
-    if (!content || posting || !session) {
+    if (!content || posting || !authTokens) {
       return;
     }
 
@@ -336,23 +360,57 @@ export default function App() {
     } finally {
       setPosting(false);
     }
-  }, [newPostContent, posting, session]);
+  }, [newPostContent, posting, authTokens]);
 
   const isPostButtonDisabled = useMemo(
     () => posting || newPostContent.trim().length === 0,
     [posting, newPostContent],
   );
 
+  const handleAuthenticated = useCallback(
+    async (tokens: SessionTokens | null) => {
+      if (!tokens) {
+        await clearStoredSession();
+        setClientAuthTokens(null);
+        setAuthTokensState(null);
+        setProfile(null);
+        return;
+      }
+
+      setAuthLoading(true);
+      try {
+        await saveSession(tokens);
+        setClientAuthTokens(tokens);
+        setAuthTokensState(tokens);
+        const profileResponse = await fetchProfile();
+        setProfile(profileResponse);
+        setAuthError(null);
+      } catch (error) {
+        setAuthError(getErrorMessage('Não foi possível carregar a sessão.', error));
+        setProfile(null);
+        setAuthTokensState(null);
+        setClientAuthTokens(null);
+        await clearStoredSession();
+      } finally {
+        setAuthLoading(false);
+      }
+    },
+    [],
+  );
+
   const handleSignOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      await clearStoredSession();
+      setClientAuthTokens(null);
+      setAuthTokensState(null);
+      setProfile(null);
+      setAgenda([]);
+      setBadges([]);
+      setPosts([]);
+      setAttendanceStatus({});
     } catch (error) {
       Alert.alert('Erro', getErrorMessage('Não foi possível encerrar a sessão.', error));
     }
-  }, []);
-
-  const clearSessionError = useCallback(() => {
-    setSessionError(null);
   }, []);
 
   const handleNavPress = useCallback((itemKey: NavItem['key']) => {
@@ -381,7 +439,7 @@ export default function App() {
         <View style={styles.headerBar}>
           <View>
             <Text style={styles.headerGreeting}>Olá,</Text>
-            <Text style={styles.headerUser}>{session.user?.email ?? 'Aluno EDClub'}</Text>
+            <Text style={styles.headerUser}>{profile?.user.email ?? 'Aluno EDClub'}</Text>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
@@ -561,7 +619,7 @@ export default function App() {
     </ScrollView>
   );
 
-  if (sessionLoading) {
+  if (authLoading) {
     return (
       <SafeAreaView style={styles.loadingSafeArea}>
         <ActivityIndicator color="#ffffff" />
@@ -569,8 +627,13 @@ export default function App() {
     );
   }
 
-  if (!session) {
-    return <LoginScreen initialError={sessionError} onAuthenticated={clearSessionError} />;
+  if (!authTokens) {
+    return (
+      <LoginScreen
+        initialError={authError}
+        onAuthenticated={handleAuthenticated}
+      />
+    );
   }
 
   return (

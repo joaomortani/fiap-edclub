@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { EventDTO } from "@edclub/shared";
 
-import { listEvents, markAttendance } from "../../lib/api/events";
+import { listEvents, listAttendance, markAttendance } from "../../lib/api/events";
 import { Button } from "../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card";
 
@@ -37,10 +37,18 @@ export function AttendanceList() {
 
     const fetchEvents = async () => {
       try {
-        const allEvents = await listEvents();
+        const [allEvents, attendanceResult] = await Promise.all([
+          listEvents(),
+          listAttendance(),
+        ]);
+
         if (!isMounted) {
           return;
         }
+
+        const attendanceMap = new Map(
+          attendanceResult.attendances.map((attendance) => [attendance.eventId, attendance.status]),
+        );
 
         const todaysEvents = allEvents
           .filter((event) => {
@@ -49,15 +57,17 @@ export function AttendanceList() {
           })
           .map((event) => ({
             ...event,
-            isPresent: false,
+            isPresent: attendanceMap.get(event.id) === "present",
             isSubmitting: false,
           }));
 
         setEvents(todaysEvents);
+        setError(null);
       } catch (fetchError) {
         if (!isMounted) {
           return;
         }
+        console.error('Erro ao carregar eventos de hoje', fetchError);
         setError("Não foi possível carregar os eventos de hoje.");
       } finally {
         if (isMounted) {

@@ -31,9 +31,23 @@ export async function GET(request: Request) {
 
     const { data: progress } = await supabase.rpc('get_weekly_progress', { uid: user.id });
 
+    const attendances = (data ?? []).map((attendance) => ({
+      id: attendance.id,
+      eventId: attendance.event_id,
+      userId: attendance.user_id,
+      status: attendance.status,
+      createdAt: attendance.created_at
+    }));
+
+    const [row] = progress ?? [];
+
     return NextResponse.json({
-      attendances: data ?? [],
-      weeklyProgress: progress?.[0] ?? { presents: 0, total: 0, percent: 0 }
+      attendances,
+      weeklyProgress: {
+        presents: Number(row?.presents ?? 0),
+        total: Number(row?.total ?? 0),
+        percent: Number(row?.percent ?? 0)
+      }
     });
   } catch (error) {
     return toErrorResponse(error);
@@ -69,7 +83,19 @@ export async function POST(request: Request) {
         throw error;
       }
 
-      return NextResponse.json({ attendance: data });
+      if (!data) {
+        throw new Error('Attendance update returned no data');
+      }
+
+      return NextResponse.json({
+        attendance: {
+          id: data.id,
+          eventId: data.event_id,
+          userId: data.user_id,
+          status: data.status,
+          createdAt: data.created_at
+        }
+      });
     }
 
     const { data, error } = await supabase
@@ -86,7 +112,19 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    return NextResponse.json({ attendance: data });
+    if (!data) {
+      throw new Error('Attendance creation returned no data');
+    }
+
+    return NextResponse.json({
+      attendance: {
+        id: data.id,
+        eventId: data.event_id,
+        userId: data.user_id,
+        status: data.status,
+        createdAt: data.created_at
+      }
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.flatten() }, { status: 400 });

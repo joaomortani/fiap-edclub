@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { BadgeDTO } from "@edclub/shared";
 
@@ -13,7 +14,7 @@ const formatEarnedDate = (isoDate: string) => {
       month: "short",
       year: "numeric",
     }).format(new Date(isoDate));
-  } catch (error) {
+  } catch {
     return isoDate;
   }
 };
@@ -39,6 +40,7 @@ export function BadgeList() {
         setHasError(false);
       } catch (error) {
         if (isMounted) {
+          console.error('Erro ao carregar badges', error);
           setHasError(true);
         }
       } finally {
@@ -79,10 +81,12 @@ export function BadgeList() {
           className="flex gap-3 rounded-lg border border-slate-800/70 bg-slate-900/60 p-4 shadow-lg shadow-slate-950/40"
         >
           {badge.iconUrl ? (
-            <img
+            <Image
               src={badge.iconUrl}
               alt={`Ícone do badge ${badge.name}`}
               className="h-12 w-12 flex-none rounded-full object-cover"
+              width={48}
+              height={48}
             />
           ) : (
             <BadgeIcon name={badge.name} className="h-12 w-12 flex-none" size={28} />
