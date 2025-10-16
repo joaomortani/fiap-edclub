@@ -5,7 +5,9 @@
   "scripts": {
     "dev:web": "npm run dev --workspace web",
     "dev:mobile": "npm run start --workspace mobile",
+    "dev:backend": "npm run dev --workspace backend",
     "build:web": "npm run build --workspace web",
+    "build:backend": "npm run build --workspace backend",
     "format": "prettier -w ."
   }
 }
