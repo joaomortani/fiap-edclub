@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
 import { requireAuth, requireTeacherRole, toErrorResponse } from '@lib/auth';
 
 const awardSchema = z.object({
@@ -33,11 +34,17 @@ export async function GET(request: Request) {
       throw assignmentsError;
     }
 
-    const assignmentSet = new Map(assignments?.map((assignment) => [assignment.badge_id, assignment.awarded_at]));
+    const assignmentSet = new Map(
+      (assignments ?? []).map((assignment) => [assignment.badge_id, assignment.awarded_at ?? null])
+    );
 
     const merged = (badges ?? []).map((badge) => ({
-      ...badge,
-      awardedAt: assignmentSet.get(badge.id) ?? null
+      id: badge.id,
+      name: badge.name,
+      description: badge.rule ?? null,
+      iconUrl: null,
+      awardedAt: assignmentSet.get(badge.id) ?? null,
+      userId
     }));
 
     return NextResponse.json({ badges: merged });

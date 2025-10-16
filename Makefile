@@ -3,7 +3,7 @@ SHELL := /bin/bash
 NODE_VERSION := v21.7.3
 
 # Configurações
-.PHONY: setup install dev-web dev-mobile build-web clean
+.PHONY: setup install dev-web dev-backend dev-stack dev-mobile build-web clean help
 
 # 1) Configura ambiente e dependências
 setup:
@@ -19,6 +19,18 @@ install:
 # 3) Roda o Next.js (web)
 dev-web:
 	@npm run dev:web
+
+# 3b) Roda o backend BFF (Next.js em 4000)
+dev-backend:
+	@npm run dev:backend
+
+# 3c) Roda web e backend em paralelo (Ctrl+C para encerrar ambos)
+dev-stack:
+	@echo "→ Iniciando backend (porta 4000) e web (porta 3000)"
+	@trap 'kill 0' SIGINT SIGTERM EXIT; \
+		npm run dev:backend & \
+		npm run dev:web & \
+		wait
 
 # 4) Roda o Expo (mobile)
 dev-mobile:
@@ -42,6 +54,8 @@ help:
 	@echo "  make setup        - Configura ambiente Node e instala dependências"
 	@echo "  make install      - Instala dependências"
 	@echo "  make dev-web      - Inicia o servidor Next.js (web)"
+	@echo "  make dev-backend  - Inicia o backend BFF (porta 4000)"
+	@echo "  make dev-stack    - Inicia backend e web juntos"
 	@echo "  make dev-mobile   - Inicia o Expo (mobile)"
 	@echo "  make build-web    - Faz build do app web"
 	@echo "  make clean        - Remove builds e node_modules"

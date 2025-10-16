@@ -10,6 +10,14 @@ npm run dev:web
 npm run dev:mobile
 npm run dev:backend
 
+### Makefile
+
+Também é possível usar o `Makefile` para subir os serviços em modo de desenvolvimento:
+
+- `make dev-backend` — inicia o backend na porta 4000.
+- `make dev-web` — inicia o frontend na porta 3000.
+- `make dev-stack` — inicia backend e frontend em paralelo com um único comando (Ctrl+C encerra ambos).
+
 ### Variáveis de ambiente
 
 Configure os aplicativos web e mobile com a URL do backend BFF (Next.js) através das seguintes variáveis:
