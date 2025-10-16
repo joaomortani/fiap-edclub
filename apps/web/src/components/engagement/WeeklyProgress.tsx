@@ -48,6 +48,7 @@ export default function WeeklyProgress() {
         setHasError(false);
       } catch (error) {
         if (isMounted) {
+          console.error('Erro ao carregar progresso semanal', error);
           setHasError(true);
           setProgress(INITIAL_STATE);
         }

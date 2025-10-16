@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { loginWithPassword, signUpWithPassword } from "@/lib/api/auth";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 type AuthMode = "login" | "register";
 
@@ -16,7 +16,7 @@ const MIN_PASSWORD_LENGTH = 6;
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, signIn, signUp, error: authError } = useAuth();
 
   const [mode, setMode] = useState<AuthMode>(() =>
     searchParams?.get("mode") === "register" ? "register" : "login",
@@ -40,7 +40,7 @@ export default function LoginPage() {
   }, [user, isLoading, router]);
 
   const resetMessages = () => {
-    setError(null);
+    setError(authError);
     setFeedback(null);
   };
 
@@ -82,17 +82,17 @@ export default function LoginPage() {
 
     try {
       if (mode === "login") {
-        await loginWithPassword(trimmedEmail, password);
+        await signIn(trimmedEmail, password);
         setFeedback("Login realizado! Redirecionando...");
       } else {
-        const result = await signUpWithPassword(trimmedEmail, password);
+        const result = await signUp(trimmedEmail, password);
 
-        if (result.session) {
-          setFeedback("Conta criada com sucesso! Redirecionando...");
-        } else {
+        if (result.requiresConfirmation) {
           setFeedback(
             "Conta criada! Verifique seu e-mail para confirmar o cadastro antes de acessar.",
           );
+        } else {
+          setFeedback("Conta criada com sucesso! Redirecionando...");
         }
       }
     } catch (err) {

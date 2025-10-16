@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { loginWithPassword, signUpWithPassword } from '../api/auth';
+import type { SessionTokens } from '../lib/auth-storage';
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -20,7 +21,7 @@ type AuthMode = 'login' | 'register';
 
 type LoginScreenProps = {
   initialError?: string | null;
-  onAuthenticated?: () => void;
+  onAuthenticated?: (session: SessionTokens | null) => void;
 };
 
 const MODE_METADATA: Record<
@@ -116,21 +117,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ initialError, onAuthenticated
 
     try {
       if (mode === 'login') {
-        await loginWithPassword(trimmedEmail, password);
+        const response = await loginWithPassword(trimmedEmail, password);
         setFeedback('Login realizado! Redirecionando...');
+        onAuthenticated?.(response.session);
       } else {
         const result = await signUpWithPassword(trimmedEmail, password);
 
         if (result.session) {
           setFeedback('Conta criada com sucesso! Redirecionando...');
+          onAuthenticated?.(result.session);
         } else {
           setFeedback(
             'Conta criada! Verifique seu e-mail para confirmar o cadastro antes de acessar.',
           );
+          onAuthenticated?.(null);
         }
       }
-
-      onAuthenticated?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível concluir a operação.');
     } finally {

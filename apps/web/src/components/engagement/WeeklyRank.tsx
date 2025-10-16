@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabase";
+
 import { getWeeklyRank } from "../../lib/api/engagement";
 
 const truncateIdentifier = (value: string) => {
@@ -16,12 +16,6 @@ const truncateIdentifier = (value: string) => {
   return `${value.slice(0, 8)}…${value.slice(-4)}`;
 };
 
-type ProfileRow = {
-  id: string;
-  full_name?: string | null;
-  email?: string | null;
-};
-
 type RankEntry = {
   userId: string;
   presents: number;
@@ -31,7 +25,6 @@ type RankEntry = {
 
 export default function WeeklyRank() {
   const [entries, setEntries] = useState<RankEntry[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -49,44 +42,9 @@ export default function WeeklyRank() {
 
         setEntries(rank);
         setHasError(false);
-
-        const userIds = rank.map((item) => item.userId).filter(Boolean);
-
-        if (userIds.length === 0) {
-          setProfiles({});
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from<ProfileRow>("profiles")
-          .select("id, full_name, email")
-          .in("id", userIds);
-
-        if (error) {
-          if (error.code !== "42P01") {
-            console.warn("Não foi possível carregar perfis para o ranking", error.message);
-          }
-
-          return;
-        }
-
-        if (!isMounted) {
-          return;
-        }
-
-        const mapped = (data ?? []).reduce<Record<string, string>>((accumulator, profile) => {
-          const display = profile.full_name?.trim() || profile.email?.trim();
-
-          if (display) {
-            accumulator[profile.id] = display;
-          }
-
-          return accumulator;
-        }, {});
-
-        setProfiles(mapped);
       } catch (error) {
         if (isMounted) {
+          console.error('Erro ao carregar ranking semanal', error);
           setHasError(true);
           setEntries([]);
         }
@@ -105,18 +63,13 @@ export default function WeeklyRank() {
   }, []);
 
   const items = useMemo(() => {
-    return entries.map((entry, index) => {
-      const label = profiles[entry.userId] ?? truncateIdentifier(entry.userId);
-      const icon = index === 0 ? "🏆" : "⭐";
-
-      return {
-        ...entry,
-        label,
-        icon,
-        rank: index + 1,
-      };
-    });
-  }, [entries, profiles]);
+    return entries.map((entry, index) => ({
+      ...entry,
+      label: truncateIdentifier(entry.userId),
+      icon: index === 0 ? "🏆" : "⭐",
+      rank: index + 1,
+    }));
+  }, [entries]);
 
   if (isLoading) {
     return (
