@@ -27,14 +27,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${geistSans.variable} ${geistMono.variable} text-slate-900 antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-slate-950 text-slate-100 antialiased`}
+      >
         <AuthProvider>
           <div className="flex min-h-screen flex-col">
             <AppHeader />
-            <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-10">
+            <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
               {children}
             </main>
-            <footer className="border-t border-slate-200 bg-white py-6 text-center text-sm text-slate-500">
+            <footer className="border-t border-slate-800 bg-slate-900/60 py-6 text-center text-sm text-slate-400">
               © {new Date().getFullYear()} EDClub. Todos os direitos reservados.
             </footer>
           </div>
