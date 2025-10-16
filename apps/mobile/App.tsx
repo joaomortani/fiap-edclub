@@ -94,25 +94,25 @@ export default function App() {
 
   const [agenda, setAgenda] = useState<EventDTO[]>([]);
   const [agendaLoading, setAgendaLoading] = useState(false);
+  const [agendaError, setAgendaError] = useState<string | null>(null);
 
   const [attendanceStatus, setAttendanceStatus] = useState<Record<string, AttendanceStatus>>({});
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [markingEventId, setMarkingEventId] = useState<string | null>(null);
+  const [attendanceError, setAttendanceError] = useState<string | null>(null);
 
   const [badges, setBadges] = useState<BadgeDTO[]>([]);
   const [badgesLoading, setBadgesLoading] = useState(false);
+  const [badgesError, setBadgesError] = useState<string | null>(null);
 
   const [posts, setPosts] = useState<PostDTO[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
+  const [postsError, setPostsError] = useState<string | null>(null);
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeNavKey, setActiveNavKey] = useState<NavItem['key']>('home');
-
-  const handleRequestError = useCallback((fallback: string, error: unknown) => {
-    Alert.alert('Erro', getErrorMessage(fallback, error));
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -169,6 +169,7 @@ export default function App() {
   const fetchAgenda = useCallback(async () => {
     if (!session) {
       setAgenda([]);
+      setAgendaError(null);
       return;
     }
 
@@ -176,16 +177,18 @@ export default function App() {
     try {
       const events = await listEvents();
       setAgenda(events);
+      setAgendaError(null);
     } catch (error) {
-      handleRequestError('Não foi possível carregar a agenda.', error);
+      setAgendaError(getErrorMessage('Não foi possível carregar a agenda.', error));
     } finally {
       setAgendaLoading(false);
     }
-  }, [handleRequestError, session]);
+  }, [session]);
 
   const fetchBadges = useCallback(async () => {
     if (!session) {
       setBadges([]);
+      setBadgesError(null);
       return;
     }
 
@@ -193,16 +196,18 @@ export default function App() {
     try {
       const response = await listMyBadges();
       setBadges(response);
+      setBadgesError(null);
     } catch (error) {
-      handleRequestError('Não foi possível carregar seus badges.', error);
+      setBadgesError(getErrorMessage('Não foi possível carregar seus badges.', error));
     } finally {
       setBadgesLoading(false);
     }
-  }, [handleRequestError, session]);
+  }, [session]);
 
   const fetchPosts = useCallback(async () => {
     if (!session) {
       setPosts([]);
+      setPostsError(null);
       return;
     }
 
@@ -210,12 +215,13 @@ export default function App() {
     try {
       const response = await listPosts();
       setPosts(response);
+      setPostsError(null);
     } catch (error) {
-      handleRequestError('Não foi possível carregar o feed.', error);
+      setPostsError(getErrorMessage('Não foi possível carregar o feed.', error));
     } finally {
       setPostsLoading(false);
     }
-  }, [handleRequestError, session]);
+  }, [session]);
 
   const handleRefresh = useCallback(async () => {
     if (!session) {
@@ -233,6 +239,10 @@ export default function App() {
       setBadges([]);
       setPosts([]);
       setAttendanceStatus({});
+      setAgendaError(null);
+      setBadgesError(null);
+      setPostsError(null);
+      setAttendanceError(null);
       return;
     }
 
@@ -250,6 +260,7 @@ export default function App() {
     if (!session) {
       setAttendanceStatus({});
       setAttendanceLoading(false);
+      setAttendanceError(null);
       return;
     }
 
@@ -258,11 +269,14 @@ export default function App() {
     if (eventIds.length === 0) {
       setAttendanceStatus({});
       setAttendanceLoading(false);
+      setAttendanceError(null);
       return;
     }
 
     let isMounted = true;
     setAttendanceLoading(true);
+
+    setAttendanceError(null);
 
     getAttendanceStatus(eventIds)
       .then((result) => {
@@ -272,7 +286,9 @@ export default function App() {
       })
       .catch((error) => {
         if (isMounted) {
-          handleRequestError('Não foi possível carregar as presenças de hoje.', error);
+          setAttendanceError(
+            getErrorMessage('Não foi possível carregar as presenças de hoje.', error),
+          );
         }
       })
       .finally(() => {
@@ -284,26 +300,24 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [handleRequestError, session, todaysEvents]);
+  }, [session, todaysEvents]);
 
-  const handleMarkAttendance = useCallback(
-    async (eventId: string) => {
-      setMarkingEventId(eventId);
-      try {
-        await markAttendance(eventId, 'present');
-        setAttendanceStatus((current) => ({
-          ...current,
-          [eventId]: 'present',
-        }));
-        Alert.alert('Presença confirmada', 'Sua presença foi registrada.');
-      } catch (error) {
-        handleRequestError('Não foi possível marcar a presença.', error);
-      } finally {
-        setMarkingEventId(null);
-      }
-    },
-    [handleRequestError],
-  );
+  const handleMarkAttendance = useCallback(async (eventId: string) => {
+    setMarkingEventId(eventId);
+    try {
+      await markAttendance(eventId, 'present');
+      setAttendanceStatus((current) => ({
+        ...current,
+        [eventId]: 'present',
+      }));
+      setAttendanceError(null);
+      Alert.alert('Presença confirmada', 'Sua presença foi registrada.');
+    } catch (error) {
+      setAttendanceError(getErrorMessage('Não foi possível marcar a presença.', error));
+    } finally {
+      setMarkingEventId(null);
+    }
+  }, []);
 
   const handleCreatePost = useCallback(async () => {
     const content = newPostContent.trim();
@@ -316,12 +330,13 @@ export default function App() {
       const created = await createPost(content);
       setPosts((current) => [created, ...current]);
       setNewPostContent('');
+      setPostsError(null);
     } catch (error) {
-      handleRequestError('Não foi possível publicar agora.', error);
+      setPostsError(getErrorMessage('Não foi possível publicar agora.', error));
     } finally {
       setPosting(false);
     }
-  }, [handleRequestError, newPostContent, posting, session]);
+  }, [newPostContent, posting, session]);
 
   const isPostButtonDisabled = useMemo(
     () => posting || newPostContent.trim().length === 0,
@@ -332,9 +347,9 @@ export default function App() {
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      handleRequestError('Não foi possível encerrar a sessão.', error);
+      Alert.alert('Erro', getErrorMessage('Não foi possível encerrar a sessão.', error));
     }
-  }, [handleRequestError]);
+  }, []);
 
   const clearSessionError = useCallback(() => {
     setSessionError(null);
@@ -392,9 +407,14 @@ export default function App() {
             <Text style={styles.sectionTitle}>Agenda</Text>
             <Text style={styles.sectionSubtitle}>Próximos compromissos da sua turma</Text>
           </View>
+          {!!agendaError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {agendaError}
+            </Text>
+          )}
           {agendaLoading ? (
             <ActivityIndicator color="#2563eb" />
-          ) : upcomingEvents.length === 0 ? (
+          ) : upcomingEvents.length === 0 && !agendaError ? (
             <Text style={styles.emptyText}>Nenhum evento na agenda.</Text>
           ) : (
             <View style={styles.listGap}>
@@ -414,9 +434,14 @@ export default function App() {
             <Text style={styles.sectionSubtitle}>Eventos de hoje para confirmar presença</Text>
           </View>
           <WeeklyProgress />
+          {!!attendanceError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {attendanceError}
+            </Text>
+          )}
           {attendanceLoading ? (
             <ActivityIndicator color="#2563eb" />
-          ) : todaysEvents.length === 0 ? (
+          ) : todaysEvents.length === 0 && !attendanceError ? (
             <Text style={styles.emptyText}>Você não possui eventos para hoje.</Text>
           ) : (
             <View style={styles.listGap}>
@@ -457,9 +482,14 @@ export default function App() {
             <Text style={styles.sectionTitle}>Badges</Text>
             <Text style={styles.sectionSubtitle}>Conquistas desbloqueadas recentemente</Text>
           </View>
+          {!!badgesError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {badgesError}
+            </Text>
+          )}
           {badgesLoading ? (
             <ActivityIndicator color="#2563eb" />
-          ) : badges.length === 0 ? (
+          ) : badges.length === 0 && !badgesError ? (
             <Text style={styles.emptyText}>Nenhum badge conquistado ainda.</Text>
           ) : (
             <View style={styles.listGap}>
@@ -483,6 +513,11 @@ export default function App() {
             <Text style={styles.sectionTitle}>Feed</Text>
             <Text style={styles.sectionSubtitle}>Compartilhe novidades com a turma</Text>
           </View>
+          {!!postsError && (
+            <Text style={styles.errorText} accessibilityRole="alert">
+              {postsError}
+            </Text>
+          )}
           <View style={styles.postComposer}>
             <Text style={styles.postComposerLabel}>Publique algo</Text>
             <TextInput
@@ -509,7 +544,7 @@ export default function App() {
 
           {postsLoading ? (
             <ActivityIndicator color="#2563eb" />
-          ) : posts.length === 0 ? (
+          ) : posts.length === 0 && !postsError ? (
             <Text style={styles.emptyText}>Ainda não há posts no feed.</Text>
           ) : (
             <View style={styles.listGap}>
@@ -708,6 +743,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#64748b',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#b91c1c',
   },
   listGap: {
     gap: 12,
